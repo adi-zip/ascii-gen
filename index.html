@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="Favicon.png">
+ <meta name="description" content="Transform your images into colorful ASCII art">
+<meta name="author" content="Adi">
+<meta property="og:title" content="Adi's ASCII Gen">
+<meta property="og:description" content="Transform your images into colorful ASCII art">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Adi's ASCII Gen">
+<meta name="twitter:description" content="Transform your images into colorful ASCII art">
 <title>Adi's ASCII Gen</title>
 <style>
   * { 
@@ -187,7 +196,7 @@
   }
   
   .ascii-output {
-    background: #fafafa;
+    background: #1a1a1a;
     border: 1px solid #d2d2d7;
     border-radius: 12px;
     padding: 24px;
@@ -207,7 +216,7 @@
   .ascii-output::-webkit-scrollbar-thumb {
     background: #d2d2d7;
     border-radius: 5px;
-    border: 2px solid #fafafa;
+    border: 2px solid #1a1a1a;
   }
   
   .ascii-output::-webkit-scrollbar-thumb:hover {
@@ -488,14 +497,52 @@
     });
 
     downloadBtn.addEventListener('click', () => {
-      const blob = new Blob([currentAscii], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'ascii-art.txt';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Downloaded');
+      // Create a temporary canvas to render the ASCII art as an image
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Measure the ASCII art dimensions
+      const lines = currentAscii.split('\n');
+      const charWidth = 6;
+      const lineHeight = 8;
+      const padding = 40;
+      
+      tempCanvas.width = (lines[0]?.length || 0) * charWidth + padding * 2;
+      tempCanvas.height = lines.length * lineHeight + padding * 2;
+      
+      // Fill background
+      tempCtx.fillStyle = '#1a1a1a';
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Set font
+      tempCtx.font = 'bold 10px "SF Mono", "Menlo", "Courier New", monospace';
+      
+      // Draw the colored ASCII art
+      const asciiHTML = output.innerHTML;
+      const spans = output.querySelectorAll('span');
+      let spanIndex = 0;
+      
+      for (let y = 0; y < lines.length; y++) {
+        for (let x = 0; x < lines[y].length; x++) {
+          if (spans[spanIndex]) {
+            const color = spans[spanIndex].style.color;
+            tempCtx.fillStyle = color;
+            tempCtx.fillText(lines[y][x], x * charWidth + padding, y * lineHeight + padding + 8);
+            spanIndex++;
+          }
+        }
+      }
+      
+      // Convert canvas to blob and download
+      tempCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ascii-art.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Downloaded');
+      });
     });
 
     function showToast(message) {
